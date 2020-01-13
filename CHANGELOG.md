@@ -2,8 +2,8 @@
 ## [Unreleased]
 
 
-<a name="0.3.0"></a>
-## [0.3.0] - 2020-01-13
+<a name="v0.3.0"></a>
+## [v0.3.0] - 2020-01-13
 ### Bug Fixes
 - make use of ErrorNotFound type for Get methods that are based on List methods
 - add policy ID to alert condition
@@ -113,6 +113,6 @@
 - get TestListApplications passing
 
 
-[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/0.3.0...HEAD
-[0.3.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.0...0.3.0
+[Unreleased]: https://github.com/newrelic/newrelic-client-go/compare/v0.3.0...HEAD
+[v0.3.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/newrelic/newrelic-client-go/compare/v0.1.0...v0.2.0
