@@ -3,6 +3,9 @@
 package alerts
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -175,5 +178,69 @@ func TestIntegrationChannel(t *testing.T) {
 
 		require.NoError(t, err)
 		require.NotNil(t, deleted)
+	}
+}
+
+func TestListChannels(t *testing.T) {
+	fmt.Printf("\n\nAPI KEY: %+v \n\n", os.Getenv("NEWRELIC_API_KEY"))
+
+	client := newIntegrationTestClient(t)
+	count := 400
+
+	for i := 0; i < count; i++ {
+		channel := Channel{
+			Name: fmt.Sprintf("test-channel-%d", i),
+			Type: "email",
+			Configuration: ChannelConfiguration{
+				Recipients:            "sblue@newrelic.com",
+				IncludeJSONAttachment: "true",
+			},
+		}
+
+		ch, err := client.CreateChannel(channel)
+
+		if err != nil {
+			t.Log(err)
+		} else {
+			fmt.Printf("\nCreated channel: %+v\n", ch.Name)
+		}
+	}
+
+	channels, _ := client.ListChannels()
+
+	fmt.Printf("\nChannels count: %+v\n", len(channels))
+
+	// for _, ch := range channels {
+	// 	match := strings.HasPrefix(ch.Name, "test-channel")
+
+	// 	if match == true {
+	// 		c, err := client.DeleteChannel(ch.ID)
+
+	// 		if err != nil {
+	// 			t.Log(err)
+	// 		}
+
+	// 		t.Logf("Deleted channel: %+v", c.Name)
+	// 	}
+	// }
+}
+
+func TestDeleteChannels(t *testing.T) {
+	client := newIntegrationTestClient(t)
+
+	channels, _ := client.ListChannels()
+
+	for _, ch := range channels {
+		match := strings.HasPrefix(ch.Name, "test-channel")
+
+		if match == true {
+			_, err := client.DeleteChannel(ch.ID)
+
+			t.Logf("\nDeleting channel: %+v\n", ch.Name)
+
+			if err != nil {
+				t.Log(err)
+			}
+		}
 	}
 }

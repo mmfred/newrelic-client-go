@@ -12,8 +12,14 @@ func (alerts *Alerts) ListChannels() ([]*Channel, error) {
 	alertChannels := []*Channel{}
 	nextURL := "/alerts_channels.json"
 
+	pageCount := 1
+
 	for nextURL != "" {
 		resp, err := alerts.client.Get(nextURL, nil, &response)
+
+		pageCount++
+
+		fmt.Printf("\n\nPage Count: %+v \n\n", pageCount)
 
 		if err != nil {
 			return nil, err
@@ -21,9 +27,32 @@ func (alerts *Alerts) ListChannels() ([]*Channel, error) {
 
 		alertChannels = append(alertChannels, response.Channels...)
 
+		response = alertChannelsResponse{}
+
 		paging := alerts.pager.Parse(resp)
 		nextURL = paging.Next
 	}
+
+	channelIDs := make(map[int]int)
+	index := 0
+
+	for _, ch := range alertChannels {
+		channelIDs[ch.ID]++
+
+		index++
+	}
+
+	fmt.Println(" ")
+	fmt.Println(" ")
+
+	for k, n := range channelIDs {
+		if n > 1 {
+			fmt.Printf("Duplicate Channel - ID: %+v - Count: %+v\n", k, n)
+		}
+	}
+
+	fmt.Println(" ")
+	fmt.Println(" ")
 
 	return alertChannels, nil
 }
