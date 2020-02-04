@@ -185,11 +185,14 @@ func TestListChannels(t *testing.T) {
 	fmt.Printf("\n\nAPI KEY: %+v \n\n", os.Getenv("NEWRELIC_API_KEY"))
 
 	client := newIntegrationTestClient(t)
-	count := 400
+	count := 201
+
+	names := []string{}
 
 	for i := 0; i < count; i++ {
-		channel := Channel{
-			Name: fmt.Sprintf("test-channel-%d", i),
+		n := fmt.Sprintf("test-channel-%d", i)
+		names = append(names, n)
+		channel := Channel{Name: n,
 			Type: "email",
 			Configuration: ChannelConfiguration{
 				Recipients:            "sblue@newrelic.com",
@@ -208,21 +211,30 @@ func TestListChannels(t *testing.T) {
 
 	channels, _ := client.ListChannels()
 
-	fmt.Printf("\nChannels count: %+v\n", len(channels))
+	t.Logf("Found %d channels", len(channels))
 
-	// for _, ch := range channels {
-	// 	match := strings.HasPrefix(ch.Name, "test-channel")
+	listedNames := []string{}
 
-	// 	if match == true {
-	// 		c, err := client.DeleteChannel(ch.ID)
+	for _, ch := range channels {
+		listedNames = append(listedNames, ch.Name)
+	}
 
-	// 		if err != nil {
-	// 			t.Log(err)
-	// 		}
+	for _, n := range names {
+		found := func(name string, names []string) bool {
+			for _, x := range names {
+				if x == name {
+					return true
+				}
+			}
+			return false
+		}(n, listedNames)
 
-	// 		t.Logf("Deleted channel: %+v", c.Name)
-	// 	}
-	// }
+		if !found {
+			t.Errorf("Channel with name %s was not found", n)
+		}
+
+	}
+
 }
 
 func TestDeleteChannels(t *testing.T) {

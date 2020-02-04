@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	neturl "net/url"
+	"reflect"
 	"time"
 
 	"github.com/google/go-querystring/query"
@@ -90,6 +91,38 @@ func (c *NewRelicClient) Get(
 	respBody interface{},
 ) (*http.Response, error) {
 	return c.do(http.MethodGet, url, queryParams, nil, respBody)
+}
+
+// GetPages is functionally a Get call, but with paging.  Following the particular pattern where the nextURL is stored in the header of the response, we determine if there are more objects to fetch, and then fetch them.
+func (c *NewRelicClient) GetPages(
+	url string,
+	queryParams interface{},
+	respBody interface{},
+	ch chan interface{},
+	pager Pager,
+) ([]*http.Response, error) {
+
+	httpResponses := []*http.Response{}
+
+	nextURL := url
+
+	for nextURL != "" {
+		v := reflect.New(reflect.TypeOf(respBody).Elem()).Interface()
+		resp, err := c.do(http.MethodGet, nextURL, queryParams, nil, &v)
+		if err != nil {
+			return httpResponses, err
+		}
+
+		ch <- v
+
+		httpResponses = append(httpResponses, resp)
+		paging := pager.Parse(resp)
+		nextURL = paging.Next
+
+		resp.Body.Close()
+	}
+
+	return httpResponses, nil
 }
 
 // Post represents an HTTP POST request to a New Relic API.

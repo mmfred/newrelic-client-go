@@ -23,7 +23,7 @@ GOTOOLS += github.com/client9/misspell/cmd/misspell \
            github.com/llorllale/go-gitlint/cmd/go-gitlint
 
 
-lint: deps spell-check gofmt govet golint ineffassign gocyclo bodyclose lint-commit
+lint: deps spell-check gofmt govet golint ineffassign gocyclo lint-commit
 lint-fix: deps spell-check-fix gofmt-fix
 
 #

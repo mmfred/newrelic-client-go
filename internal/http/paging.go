@@ -23,6 +23,7 @@ type LinkHeaderPager struct{}
 func (l *LinkHeaderPager) Parse(resp *http.Response) Paging {
 	paging := Paging{}
 	header := resp.Header.Get("Link")
+
 	if header != "" {
 		links := linkheader.Parse(header)
 

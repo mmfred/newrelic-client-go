@@ -2,57 +2,43 @@ package alerts
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/newrelic/newrelic-client-go/pkg/errors"
 )
 
 // ListChannels returns all alert channels for a given account.
 func (alerts *Alerts) ListChannels() ([]*Channel, error) {
-	response := alertChannelsResponse{}
 	alertChannels := []*Channel{}
-	nextURL := "/alerts_channels.json"
+	url := "/alerts_channels.json"
 
-	pageCount := 1
+	wg := sync.WaitGroup{}
 
-	for nextURL != "" {
-		resp, err := alerts.client.Get(nextURL, nil, &response)
+	var response alertChannelsResponse
+	respChan := make(chan interface{}, 1)
+	wg.Add(1)
+	go func() {
+		for x := range respChan {
+			v := x.(*alertChannelsResponse)
 
-		pageCount++
-
-		fmt.Printf("\n\nPage Count: %+v \n\n", pageCount)
-
-		if err != nil {
-			return nil, err
+			alertChannels = append(alertChannels, v.Channels...)
 		}
+		wg.Done()
+	}()
 
-		alertChannels = append(alertChannels, response.Channels...)
+	// go func() {
 
-		response = alertChannelsResponse{}
-
-		paging := alerts.pager.Parse(resp)
-		nextURL = paging.Next
+	_, err := alerts.client.GetPages(url, nil, &response, respChan, alerts.pager)
+	if err != nil {
+		return nil, err
+		// alerts.logger.Error(err.Error())
 	}
+	// }()
 
-	channelIDs := make(map[int]int)
-	index := 0
+	close(respChan)
 
-	for _, ch := range alertChannels {
-		channelIDs[ch.ID]++
-
-		index++
-	}
-
-	fmt.Println(" ")
-	fmt.Println(" ")
-
-	for k, n := range channelIDs {
-		if n > 1 {
-			fmt.Printf("Duplicate Channel - ID: %+v - Count: %+v\n", k, n)
-		}
-	}
-
-	fmt.Println(" ")
-	fmt.Println(" ")
+	wg.Wait()
+	fmt.Printf("Number: %+v", len(alertChannels))
 
 	return alertChannels, nil
 }
